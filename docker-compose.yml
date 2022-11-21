@@ -1,0 +1,26 @@
+version: '3.4'
+
+services:
+ postgresql_database:
+  image: postgres:15
+  container_name: postgresqlDB
+  environment:
+   - POSTGRES_USER=admin
+   - POSTGRES_PASSWORD=adminadmin
+   - POSTGRES_DB=EDM
+  ports:
+   - 5432:5432
+  volumes:
+   - ./db:/var/lib/postgresql/data/
+
+ ElectricityDataManager:
+  image: ${DOCKER_REGISTRY-}electricitydatamanager
+  container_name: EDM
+  build:
+   context: .
+   dockerfile: ElectricityDataManager/Dockerfile
+  ports:
+   - 5000:80
+   - 5001:443
+  depends_on:
+   - postgresql_database
