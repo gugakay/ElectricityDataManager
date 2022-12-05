@@ -29,7 +29,6 @@
 
   <ItemGroup>
     <Folder Include="Files\" />
-    <Folder Include="Infrastructure\Common\" />
     <Folder Include="Logs\" />
     <Folder Include="wwwroot\" />
 	<InternalsVisibleTo Include="ElectricityDataManager.test" />
