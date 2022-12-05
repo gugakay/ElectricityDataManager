@@ -11,8 +11,7 @@ namespace DataAccess
 
         }
 
-        public virtual DbSet<ESOEntity> ESOEntity { get; set; }
-        public virtual DbSet<TaskEntity> TaskEntities { get; set; }
+        public virtual DbSet<ESOEntity> ESOEntities { get; set; }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {

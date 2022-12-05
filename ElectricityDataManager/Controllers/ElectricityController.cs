@@ -1,14 +1,6 @@
 ﻿using ElectricityDataManager.Services;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing.Template;
-using Microsoft.Extensions.Hosting;
-using System.Net;
-using System.Net.Mime;
-using Serilog;
-using DataAccess.Entities;
-using ElectricityDataManager.Infrastructure.Common;
-using DataAccess;
+using ElectricityDataManager.Infrastructure.BackgroundWorker;
 
 namespace ElectricityDataManager.Controllers
 {
@@ -16,55 +8,45 @@ namespace ElectricityDataManager.Controllers
     public class ElectricityController : Controller
     {
         private readonly IElectricityService _electricityService;
-        private readonly ITaskService _taskService;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IBackgroundTaskQueue _backgroundTaskQueue;
+        private readonly Serilog.ILogger _logger;
 
-        public ElectricityController(IElectricityService electricityService, ITaskService taskService, IServiceProvider serviceProvider)
+        public ElectricityController(
+            IElectricityService electricityService,
+            IBackgroundTaskQueue backgroundWorkerQueue,
+            Serilog.ILogger logger)
         {
             _electricityService = electricityService;
-            _taskService = taskService;
-            _serviceProvider = serviceProvider;
+            _backgroundTaskQueue = backgroundWorkerQueue;
+            _logger = logger;
         }
 
-        [HttpGet("RetrieveDataFromESO")]
-        public async Task<CommonResponse> RetrieveDataFromESO()
+        [HttpPost("ElectricityDataEntities")]
+        public IActionResult RetrieveDataFromESO(CancellationToken cancellationToken)
         {
-            if (_taskService.IsRunning("RetrieveDataFromESO"))
-                return new CommonResponse() { Message = "Try another time." };
-            else
+            if(cancellationToken.IsCancellationRequested)
+                return BadRequest("Call has been canceled");
+
+            _backgroundTaskQueue.QueueBackgroundWorkItem(async token =>
             {
-                await _taskService.RegisterTaskAsync("RetrieveDataFromESO");
+                await _electricityService.RetrieveDataFromESOAsync();
 
-                _ = Task.Run(async () =>
-                {
-                    await using (var scope = _serviceProvider.CreateAsyncScope())
-                    {
-                        var context = scope.ServiceProvider.GetRequiredService<DefaultDbContext>();
+                _logger.Information($"Done at {DateTime.UtcNow.TimeOfDay}");
+            });
 
-                        await _electricityService.RetrieveDataFromESO(new UnitOfWork(context));
-                    }
-                });
-
-                return new CommonResponse() { Message = "Started processing." };
-            }
+            return Accepted("Started processing.");
         }
 
 
-        [HttpGet("GetAggregatedData")]
-        public CommonResponse<List<ESOEntity>> GetAggregatedData()
+        [HttpGet("ElectricityDataEntities")]
+        public IActionResult GetAggregatedData()
         {
-            CommonResponse<List<ESOEntity>> response = new CommonResponse<List<ESOEntity>>();
-
             var result = _electricityService.GetAggregatedData();
 
-            if (result != null)
-            {
-                response.Data = result;
-                response.StatusCode = 1;
-                response.Message = "OK";
-            }
+            if (result == null)
+                return NoContent();
 
-            return response;
+            return Ok(result);
         }
     }
 }

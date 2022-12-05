@@ -1,11 +1,10 @@
-﻿using DataAccess;
-using DataAccess.Entities;
+﻿using DataAccess.Entities;
 
 namespace ElectricityDataManager.Services
 {
     public interface IElectricityService
     {
-        public Task RetrieveDataFromESO(UnitOfWork uow);
+        public Task RetrieveDataFromESOAsync();
         public List<ESOEntity> GetAggregatedData();
     }
 }

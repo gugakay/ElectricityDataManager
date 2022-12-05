@@ -6,14 +6,12 @@ namespace DataAccess
     public class Repository<T> : IRepository<T> where T : class
     {
         private readonly DbSet<T> _dbSet;
-        private readonly DefaultDbContext _dbContext;
 
 
         public Repository(DefaultDbContext dbContext)
         {
-            _dbContext = dbContext;
             _dbSet = dbContext.Set<T>();
-        }
+        } 
 
         public IQueryable<T> GetAllAsNoTrackingQueryable() =>
             _dbSet.AsNoTracking();

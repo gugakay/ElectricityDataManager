@@ -1,8 +1,7 @@
 using DataAccess;
-using ElectricityDataManager.Infrastructure.Common;
+using ElectricityDataManager.Infrastructure.BackgroundWorker;
 using ElectricityDataManager.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,24 +12,30 @@ IWebHostEnvironment environment = builder.Environment;
 
 builder.Services.AddDbContext<DefaultDbContext>(opt =>
         opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<DbContext, DefaultDbContext>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+builder.Services.AddHttpClient();
+
+builder.Services.AddTransient<HttpClient>();
+
+builder.Services.AddHostedService<QueuedHostedService>();
+builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 builder.Services.AddTransient<IFileService, FileService>();
 builder.Services.AddTransient<IElectricityService, ElectricityService>();
-builder.Services.AddTransient<ITaskService, TaskService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var _logger = new LoggerConfiguration()
-                    //.MinimumLevel.Error()
                     .WriteTo.File(Path.Combine(environment.ContentRootPath, "Logs\\Log.log"), rollingInterval: RollingInterval.Day)
                     .CreateLogger();
 
-builder.Logging.AddSerilog(_logger);
+builder.Host.UseSerilog(_logger);
 
 var app = builder.Build();
 
@@ -49,7 +54,6 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 }
 
-app.UseMiddleware<CustomExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.UseDeveloperExceptionPage();
