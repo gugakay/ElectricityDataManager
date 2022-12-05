@@ -1,11 +1,9 @@
-﻿using Castle.Core.Internal;
-using DataAccess;
+﻿using DataAccess;
 using DataAccess.Entities;
 using ElectricityDataManager.Services;
 using ElectricityDataManager.Tests.Common;
 using FakeItEasy;
 using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ElectricityDataManager.Tests.Services
 {
