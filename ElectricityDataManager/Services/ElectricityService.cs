@@ -22,6 +22,8 @@ namespace ElectricityDataManager.Services
 
         public async Task RetrieveDataFromESOAsync()
         {
+            _logger.Information($"Retrieving information started at {DateTime.UtcNow.TimeOfDay}");
+
             try
             {
                 if (!await _fileService.DownloadPublicDataSetAsync(s_firstMonthUrl))
@@ -30,11 +32,15 @@ namespace ElectricityDataManager.Services
                     return;
                 }
 
+                _logger.Information($"File 1 downloaded at {DateTime.UtcNow.TimeOfDay}");
+
                 if (!await _fileService.DownloadPublicDataSetAsync(s_secondMonthUrl))
                 {
                     _logger.Warning("Downloaded file doesn't exist.");
                     return;
                 }
+
+                _logger.Information($"File 2 downloaded at {DateTime.UtcNow.TimeOfDay}");
 
                 var records =
                     _fileService.GetRecordsFromPublicCsvDataSet<ESOEntity, ESOEntityMap>(x => x.ObtName == "Butas");
@@ -62,6 +68,7 @@ namespace ElectricityDataManager.Services
                 unitOfWork.GetRepository<ESOEntity>().AddRange(result);
 
                 await unitOfWork.SaveChangesAsync();
+                _logger.Information($"Done at {DateTime.UtcNow.TimeOfDay}");
             }
             catch (Exception ex)
             {

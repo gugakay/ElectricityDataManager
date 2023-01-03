@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ElectricityDataManager.Infrastructure.BackgroundWorker;
 using IDatabase = StackExchange.Redis.IDatabase;
+using Hangfire;
 
 namespace ElectricityDataManager.Controllers
 {
@@ -31,12 +32,7 @@ namespace ElectricityDataManager.Controllers
             if(cancellationToken.IsCancellationRequested)
                 return BadRequest("Call has been canceled");
 
-            _backgroundTaskQueue.QueueBackgroundWorkItem(async token =>
-            {
-                await _electricityService.RetrieveDataFromESOAsync();
-
-                _logger.Information($"Done at {DateTime.UtcNow.TimeOfDay}");
-            });
+            BackgroundJob.Enqueue(() => _electricityService.RetrieveDataFromESOAsync());
 
             return Accepted("Started processing.");
         }

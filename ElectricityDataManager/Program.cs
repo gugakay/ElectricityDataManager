@@ -1,7 +1,10 @@
 using DataAccess;
 using ElectricityDataManager.Infrastructure.BackgroundWorker;
 using ElectricityDataManager.Services;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 using StackExchange.Redis;
 
@@ -28,14 +31,22 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddTransient<IFileService, FileService>();
 builder.Services.AddTransient<IElectricityService, ElectricityService>();
 
+//Add Redis
 var redis = ConnectionMultiplexer.Connect(builder.Configuration.GetValue<string>("Redis:ConnectionString"));
 builder.Services.AddScoped(s => redis.GetDatabase());
+
+//Add Hangfire
+builder.Services.AddHangfire(config =>
+                config.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"))
+                                                                    .UseSerilogLogProvider());
+builder.Services.AddHangfireServer();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var _logger = new LoggerConfiguration()
+                    .ReadFrom.Configuration(builder.Configuration.GetSection("Serilog"))
                     .WriteTo.File(Path.Combine(environment.ContentRootPath, "Logs/Log.log"), rollingInterval: RollingInterval.Day)
                     .CreateLogger();
 
@@ -62,6 +73,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.UseDeveloperExceptionPage();
 app.MapControllers();
+app.UseHangfireDashboard();
 
 app.Run();
  
