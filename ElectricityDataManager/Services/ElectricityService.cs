@@ -74,9 +74,9 @@ namespace ElectricityDataManager.Services
             }
         }
 
-        public List<ESOEntity> GetAggregatedData()
+        public IEnumerable<ESOEntity> GetAggregatedData()
         {
-            List<ESOEntity> aggregatedData = _unitOfWork.GetRepository<ESOEntity>().GetAllQueryable().ToList();
+            var aggregatedData = _unitOfWork.GetRepository<ESOEntity>().GetAllQueryable();
 
             return aggregatedData;
         }

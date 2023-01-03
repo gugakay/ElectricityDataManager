@@ -8,7 +8,7 @@ namespace ElectricityDataManager.Infrastructure.BackgroundWorker
 
         Task<Func<CancellationToken, Task>> DequeueAsync(CancellationToken cancellationToken);
     }
-
+     
     public class BackgroundTaskQueue : IBackgroundTaskQueue
     {
 

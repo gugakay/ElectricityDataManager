@@ -3,6 +3,7 @@ using ElectricityDataManager.Infrastructure.BackgroundWorker;
 using ElectricityDataManager.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,12 +28,15 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddTransient<IFileService, FileService>();
 builder.Services.AddTransient<IElectricityService, ElectricityService>();
 
+var redis = ConnectionMultiplexer.Connect(builder.Configuration.GetValue<string>("Redis:ConnectionString"));
+builder.Services.AddScoped(s => redis.GetDatabase());
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var _logger = new LoggerConfiguration()
-                    .WriteTo.File(Path.Combine(environment.ContentRootPath, "Logs\\Log.log"), rollingInterval: RollingInterval.Day)
+                    .WriteTo.File(Path.Combine(environment.ContentRootPath, "Logs/Log.log"), rollingInterval: RollingInterval.Day)
                     .CreateLogger();
 
 builder.Host.UseSerilog(_logger);

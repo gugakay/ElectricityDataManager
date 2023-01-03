@@ -5,6 +5,6 @@ namespace ElectricityDataManager.Services
     public interface IElectricityService
     {
         public Task RetrieveDataFromESOAsync();
-        public List<ESOEntity> GetAggregatedData();
+        public IEnumerable<ESOEntity> GetAggregatedData();
     }
 }
