@@ -1,10 +1,8 @@
 using DataAccess;
-using ElectricityDataManager.Infrastructure.BackgroundWorker;
 using ElectricityDataManager.Services;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Serilog;
 using StackExchange.Redis;
 
@@ -22,9 +20,6 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddHttpClient();
 
 builder.Services.AddTransient<HttpClient>();
-
-builder.Services.AddHostedService<QueuedHostedService>();
-builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 

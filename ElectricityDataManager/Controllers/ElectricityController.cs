@@ -1,6 +1,5 @@
 ﻿using ElectricityDataManager.Services;
 using Microsoft.AspNetCore.Mvc;
-using ElectricityDataManager.Infrastructure.BackgroundWorker;
 using IDatabase = StackExchange.Redis.IDatabase;
 using Hangfire;
 
@@ -10,19 +9,13 @@ namespace ElectricityDataManager.Controllers
     public class ElectricityController : Controller
     {
         private readonly IElectricityService _electricityService;
-        private readonly IBackgroundTaskQueue _backgroundTaskQueue;
-        private readonly Serilog.ILogger _logger;
         private readonly IDatabase _redisDatabase;
 
         public ElectricityController(
             IElectricityService electricityService,
-            IBackgroundTaskQueue backgroundWorkerQueue,
-            Serilog.ILogger logger,
             IDatabase redisDatabase)
         {
             _electricityService = electricityService;
-            _backgroundTaskQueue = backgroundWorkerQueue;
-            _logger = logger;
             _redisDatabase = redisDatabase;
         }
 

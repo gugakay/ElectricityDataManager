@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-
+using System.Linq.Expressions;
 
 namespace DataAccess
 {
@@ -18,6 +18,35 @@ namespace DataAccess
 
         public IQueryable<T> GetAllQueryable() =>
             _dbSet.AsQueryable();
+
+        public virtual IEnumerable<T> Get(Expression<Func<T, bool>>? filter = null,
+                                            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+                                            string? includeProperties = "")
+        {
+            IQueryable<T> query = _dbSet;
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            if(!string.IsNullOrEmpty(includeProperties))
+            {
+                foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProperty);
+                }
+            }
+
+            if (orderBy != null)
+            {
+                return orderBy(query).ToList();
+            }
+            else
+            {
+                return query.ToList();
+            }
+        }
 
         public async Task<T> AddAsync(T entity)
         {
@@ -43,7 +72,16 @@ namespace DataAccess
             }
 
             var entry = _dbSet.Update(entity);
-            entry.OriginalValues.SetValues(await entry.GetDatabaseValuesAsync());
+            var propertyValues = await entry.GetDatabaseValuesAsync();
+
+            if (propertyValues == null)
+            {
+                throw new Exception("Entity not found");
+            }
+            else
+            {
+                entry.OriginalValues.SetValues(propertyValues);
+            }
 
             return entity;
         }

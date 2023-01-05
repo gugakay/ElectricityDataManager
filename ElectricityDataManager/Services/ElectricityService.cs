@@ -66,8 +66,8 @@ namespace ElectricityDataManager.Services
                 var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
                 unitOfWork.GetRepository<ESOEntity>().AddRange(result);
-
                 await unitOfWork.SaveChangesAsync();
+
                 _logger.Information($"Done at {DateTime.UtcNow.TimeOfDay}");
             }
             catch (Exception ex)
@@ -81,11 +81,7 @@ namespace ElectricityDataManager.Services
             }
         }
 
-        public IEnumerable<ESOEntity> GetAggregatedData()
-        {
-            var aggregatedData = _unitOfWork.GetRepository<ESOEntity>().GetAllQueryable();
-
-            return aggregatedData;
-        }
+        public IEnumerable<ESOEntity> GetAggregatedData() =>
+             _unitOfWork.GetRepository<ESOEntity>().GetAllAsNoTrackingQueryable();
     }
 }

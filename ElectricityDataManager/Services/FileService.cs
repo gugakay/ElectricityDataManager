@@ -21,18 +21,16 @@ namespace ElectricityDataManager.Services
         {
             string downloadPath = Path.Combine(_hostEnvironment.ContentRootPath, "Files", url[(url.LastIndexOf('/') + 1)..]);
 
-            var httpClient = _httpClientFactory.CreateClient();
-            var stream = await httpClient.GetStreamAsync(url);
-
-            using (var fileStream = File.Create(downloadPath))
+            using (var stream = await _httpClientFactory.CreateClient().GetStreamAsync(url))
             {
+                using var fileStream = File.Create(downloadPath);
                 stream.CopyTo(fileStream);
             }
-
+            
             return File.Exists(downloadPath);
         }
 
-        public List<T> GetRecordsFromPublicCsvDataSet<T,X>(Func<T, bool>? filter = null) where X : ClassMap
+        public List<T> GetRecordsFromPublicCsvDataSet<T,X>(Func<T, bool> filter) where X : ClassMap
         {
             try
             {
@@ -60,6 +58,11 @@ namespace ElectricityDataManager.Services
             catch (DirectoryNotFoundException ex)
             {
                 _logger.Error(ex, "Directory not found while getting records from public csv data set.");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex.Message);
                 throw;
             }
         }
